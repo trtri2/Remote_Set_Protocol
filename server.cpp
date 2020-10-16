@@ -26,8 +26,11 @@ void
 net::Server::setup(void* data, int port)
 {
     _data = data;
-    
-    // TODO: Complete
+    _listenFd = socket(AF_INET, SOCK_STREAM, 0);
+    // bzero(&servaddr, sizeof(servaddr));
+    _servAddr.sin_family = AF_INET;
+    _servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    _servAddr.sin_port = htons(port);
 }
 
 // Configure the socket to use the SO_REUSEADDR option.
@@ -38,9 +41,8 @@ net::Server::initializeSocket()
 {
 	std::cout << "[SERVER] initializing socket\n";
 
-	// TODO: Complete
 	int optValue = 1;
-	int retTest = -1;
+    int retTest = setsockopt(_listenFd, SOL_SOCKET, SO_REUSEADDR, &optValue, sizeof(optValue));
 
 	printf("[SERVER] setsockopt() ret %d\n", retTest);
 
@@ -54,21 +56,36 @@ net::Server::initializeSocket()
 void 
 net::Server::bindSocket()
 {
-	// TODO: Complete
+    if (bind(_listenFd, (struct sockaddr *) &_servAddr, sizeof(_servAddr)) < 0){
+        perror("[SERVER] [ERROR] bind() failed");
+        shutdown();
+    }
+
+    //DEBUG !!
+    printf("[SERVER] binding\n");
 }
 
 // Listen to incoming connections
 void 
 net::Server::startListen()
 {
-	// TODO: Complete
+    if (listen(_listenFd, LISTENQ_SIZE) < 0){
+        perror("[SERVER] [ERROR] listen() failed");
+        shutdown();
+    }
+
+    // DEBUG !!
+    printf("[SERVER] LISTENING...\n");
 }
 
 // Close the listening socket
 void 
 net::Server::shutdown()
 {
-	// TODO: Complete
+    // DEBUG !!
+    printf("[SERVER] shutting down...\n");
+    close(_listenFd);
+    exit(1);
 }
 
 // Accept incoming connections.
@@ -77,7 +94,11 @@ void
 net::Server::handleNewConnection()
 {
   	std::cout << "[SERVER] [CONNECTION] Waiting for a new connection\n";
-
+    _connFd = accept(_listenFd, (struct sockaddr *) NULL, NULL);
+    if (_connFd < 0){
+        perror("[SERVER] [ERROR] accept() failed");
+    }
+    newConnectionCallback(this, _connFd, _data);
     // TODO: Complete
 }
 
@@ -85,7 +106,10 @@ net::Server::handleNewConnection()
 void 
 net::Server::loop()
 {
-    // TODO: Complete
+    while (true){
+        handleNewConnection();
+        close(_connFd);
+    }
 }
 
 void 

@@ -1,5 +1,5 @@
 #include "request.hpp"
-
+#include <typeinfo>
 model::Request::Request(char opt)
 {  
     setupFlags(opt);
@@ -21,15 +21,30 @@ model::Request::Request(char opt, std::string uuid, int item)
 // Decode the byte array to Request members (opt, uuid and item)
 model::Request::Request(const char* msg)
 {
-    // TODO: Set the correct opt first
-    char opt = 0;
+    char opt = msg[0];
     setupFlags(opt);
-    
-    // TODO: Complete
-    std::string uuid;
-    int item;
+    if (this->hasUuid()){
+        char uuid[KEY_SIZE+1];
+        memcpy(uuid, msg+OPT_SIZE, KEY_SIZE);
 
-    setup(opt, uuid, item);
+        // null terminator for char*
+        uuid[KEY_SIZE] = '\0';
+        std::string str(uuid);
+        if (this->hasItem()){
+            char bytes[ITEM_SIZE];     
+            memcpy(bytes, msg+OPT_SIZE+KEY_SIZE, ITEM_SIZE);
+            int item = utils::bytesToInt(bytes);
+            setup(opt, uuid, item);
+        }else{
+            setup(opt, uuid, 0);
+        }
+
+    }else{
+        setup(opt, "", 0);
+    }
+    
+    //DEBUG LINE
+    // printf("Request: OPT Code - %x, UUID - %s, Items - %d\n", this->getOpt(), this->getUuid().c_str(), this->getItem());
 }
 
 void 
@@ -99,8 +114,15 @@ model::Request::hasItem()
 int
 model::Request::getBytesCount() 
 {
-    // TODO: Complete
-    return 0;
+    // Each request has a minimum of one for OP code.
+    int bytesCount = OPT_SIZE;
+    if (this->hasUuid()){
+        bytesCount = bytesCount + KEY_SIZE;
+        if (this->hasItem()){
+            bytesCount = bytesCount + ITEM_SIZE;
+        } 
+    }
+    return bytesCount;
 }
 
 // Encode the Request object to byte array (based on its content)
@@ -109,8 +131,13 @@ model::Request::toBytes()
 {
     int bytesCount = getBytesCount();
     char* msg = new char[bytesCount];
-    
-    // TODO: Complete
-
+    msg[0] = this->getOpt();
+    if (this->hasUuid()){
+        //generate random Uuid for now
+        memcpy(msg+OPT_SIZE, this->getUuid().c_str(), KEY_SIZE);
+        if (this->hasItem()){
+            memcpy(msg+OPT_SIZE+KEY_SIZE, utils::intToBytes(this->getItem()), ITEM_SIZE);
+        }
+    }
     return msg;    
 }

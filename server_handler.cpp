@@ -9,16 +9,14 @@ net::OnNewClientConnected(net::Server* server, uint16_t fd, void* data)
 
     cout << "[SERVER] New Connection..." << endl;
     char* requestBytes = new char[MAX_BUFFER_SIZE];
-    // TODO: Receive request here
-    int readBytes = 0;
-    
+
+    int readBytes = net::ReadBytes(fd, requestBytes, REQUEST_SIZE);
     cout << "[SERVER] " << readBytes << " bytes were received" << endl;
 
     model::Request* req = new model::Request(requestBytes);
     model::Response* res = sm->HandleRequest(req);
 
-    // TODO: Send response here
-    uint16_t sentBytes = 0;
+    uint16_t sentBytes = net::SendBytes(fd, res->toBytes(), res->getBytesCount());
     
     cout << "[SERVER] " << sentBytes << " bytes were sent" << endl;
 }

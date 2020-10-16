@@ -26,5 +26,7 @@
 #define LEN_WORD_SIZE 4
 #define ITEM_SIZE 4
 #define INT_SIZE 4
+#define SET_LEN_SIZE 4
 
+#define REQUEST_SIZE 37
 #endif

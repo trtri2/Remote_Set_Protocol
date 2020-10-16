@@ -26,7 +26,20 @@ void
 net::Client::setup(const char* server_addr, int port, void* data)
 {
     _data = data;
-    // TODO: Complete
+    if ((_connFd = socket(AF_INET, SOCK_STREAM, 0)) < 0){
+        perror("[CLIENT] [ERROR] socket setup failed");
+        shutdown();
+    }
+    //bzero(&servaddr, sizeof(servaddr));
+    _servAddr.sin_family = AF_INET;
+    _servAddr.sin_port = htons(port);
+    
+    int retTest = inet_pton(AF_INET, server_addr, &_servAddr.sin_addr);
+	printf("[CLIENT] inet_pton() ret %d for %s\n", retTest, server_addr);
+    if (retTest <= 0){
+        perror("[CLIENT] [ERROR] inet_pton() failed");
+        shutdown();
+    }
 }
 
 void 
@@ -39,14 +52,20 @@ net::Client::initializeSocket()
 void 
 net::Client::shutdown()
 {
-	// TODO: Complete
+	close(_connFd);
+    exit(1);
 }
 
 // Connect to the server. You need to call "newConnectionCallback" once the connection is established
 void 
 net::Client::doConnect()
 {
-    // TODO: Complete
+    if (connect(_connFd, (struct sockaddr *) &_servAddr, sizeof(_servAddr)) < 0){
+        perror("[CLIENT] [ERROR] connect() failed");
+        shutdown();
+    }
+    newConnectionCallback(this, _connFd, _data);
+    shutdown();
 }
 
 void 

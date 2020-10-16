@@ -36,7 +36,30 @@ net::printResponse(model::Response* res) {
 char* 
 net::readResponseBytes(uint16_t fd) 
 {
-    // TODO: Complete
+    // read opt code and body length size first
+    char *responseBytes = new char[OPT_SIZE+LEN_SIZE];
+    //maybe add error handling to return nullptr
+    int numBytes = (net::ReadBytes(fd, responseBytes, (OPT_SIZE+LEN_SIZE)));
+    char opt = responseBytes[0];
+    if (opt != RET_SUCCESS){
+        return responseBytes;
+    } else{
+    // read the body_length to determine the buffer size for the rest of the response body
+        char *body = new char[LEN_SIZE];
+        memcpy(body, responseBytes+OPT_SIZE, LEN_SIZE);
+        int bodyLen = utils::bytesToInt(body);
+        char *newResponseBytes = new char[(OPT_SIZE+LEN_SIZE+bodyLen)];
+        memcpy(newResponseBytes, responseBytes, (OPT_SIZE+LEN_SIZE));
+
+        // Handle memory 
+        delete[] body;
+        delete[] responseBytes;
+
+        //maybe add error handling to return nullptr
+        numBytes = numBytes + (net::ReadBytes(fd, newResponseBytes+(OPT_SIZE+LEN_SIZE), bodyLen));
+
+        return newResponseBytes;
+    }
     return nullptr;
 }
 
@@ -48,8 +71,9 @@ net::OnClientConnected(net::Client* client, uint16_t fd, void* data)
     cout << "[CLIENT] Connected" << endl;
     
     model::Request* req = (model::Request*) data;
-    // TODO: Send request here
-    uint16_t sentBytes = 0;
+    // DEBUG LINE
+    //printf("Request: OPT Code - %c, UUID - %s, Items - %s\n", req->getOpt(), req->getUuid().c_str(), utils::intToBytes(req->getItem()));
+    uint16_t sentBytes = net::SendBytes(fd, req->toBytes(), req->getBytesCount());
     
     cout << "[CLIENT] " << sentBytes << " bytes were sent" << endl;
     
