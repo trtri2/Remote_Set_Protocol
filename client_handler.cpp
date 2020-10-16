@@ -37,26 +37,26 @@ char*
 net::readResponseBytes(uint16_t fd) 
 {
     // read opt code and body length size first
-    char *responseBytes = new char[OPT_SIZE+LEN_SIZE];
+    char *responseBytes = new char[RET_SIZE+LEN_SIZE];
     //maybe add error handling to return nullptr
-    int numBytes = (net::ReadBytes(fd, responseBytes, (OPT_SIZE+LEN_SIZE)));
-    char opt = responseBytes[0];
-    if (opt != RET_SUCCESS){
+    int numBytes = (net::ReadBytes(fd, responseBytes, (RET_SIZE+LEN_SIZE)));
+    char ret = responseBytes[0];
+    if (ret != RET_SUCCESS){
         return responseBytes;
     } else{
     // read the body_length to determine the buffer size for the rest of the response body
         char *body = new char[LEN_SIZE];
-        memcpy(body, responseBytes+OPT_SIZE, LEN_SIZE);
+        memcpy(body, responseBytes+RET_SIZE, LEN_SIZE);
         int bodyLen = utils::bytesToInt(body);
-        char *newResponseBytes = new char[(OPT_SIZE+LEN_SIZE+bodyLen)];
-        memcpy(newResponseBytes, responseBytes, (OPT_SIZE+LEN_SIZE));
+        char *newResponseBytes = new char[(RET_SIZE+LEN_SIZE+bodyLen)];
+        memcpy(newResponseBytes, responseBytes, (RET_SIZE+LEN_SIZE));
 
         // Handle memory 
         delete[] body;
         delete[] responseBytes;
 
         //maybe add error handling to return nullptr
-        numBytes = numBytes + (net::ReadBytes(fd, newResponseBytes+(OPT_SIZE+LEN_SIZE), bodyLen));
+        numBytes = numBytes + (net::ReadBytes(fd, newResponseBytes+(RET_SIZE+LEN_SIZE), bodyLen));
 
         return newResponseBytes;
     }

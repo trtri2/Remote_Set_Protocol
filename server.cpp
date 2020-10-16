@@ -99,7 +99,6 @@ net::Server::handleNewConnection()
         perror("[SERVER] [ERROR] accept() failed");
     }
     newConnectionCallback(this, _connFd, _data);
-    // TODO: Complete
 }
 
 // Handle incoming connections.

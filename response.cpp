@@ -32,11 +32,21 @@ model::Response::Response(char opt, const char* msg)
                 offset+=ITEM_SIZE;
                 this->addItem(utils::bytesToInt(itemBuffer));
             }
+            delete[] itemBuffer;
         } else if (_opt == OPT_GET_SIZE){
-
+            char *sizeBuffer = new char[SET_LEN_SIZE];
+            memcpy(sizeBuffer, msg+offset, SET_LEN_SIZE);
+            _set_size = utils::bytesToInt(sizeBuffer);
+            delete[] sizeBuffer;
         } else if (_opt == OPT_GET_SETS){
             int numItems = bodyLen / KEY_SIZE;
-
+            char *setBuffer = new char[KEY_SIZE];
+            for (int i = 0; i < numItems; i++){
+                memcpy(setBuffer, msg+offset, KEY_SIZE);
+                offset+=KEY_SIZE;
+                this->addUuid(std::string(setBuffer));
+            }
+            delete[] setBuffer;
         }
     }
     // Handle memory
@@ -69,10 +79,10 @@ model::Response::toBytes()
     int bytesCount = getBytesCount();
     char* msg = new char[bytesCount];
     // Return Code (1 byte)
-    msg[0] = this->getOpt();
+    msg[0] = this->getRet();
     // Body Length (4 bytes)
     memcpy(msg+OPT_SIZE, utils::intToBytes(this->getLen()*LEN_WORD_SIZE), LEN_SIZE);
-    if (this->getOpt() != RET_SUCCESS){
+    if (this->getRet() != RET_SUCCESS){
         return msg;
     }
     int offset = OPT_SIZE + LEN_SIZE;
@@ -81,16 +91,14 @@ model::Response::toBytes()
         std::string setID = this->getUuids().back();
         memcpy(msg+offset, setID.c_str(), KEY_SIZE);
     }else if (this->getOpt() == OPT_GET_ITEMS){
-        for(auto it = this->getItems().begin(); it != this->getItems().end(); ++it){
+        for(auto it = _items.begin(); it != _items.end(); ++it){
             memcpy(msg+offset, utils::intToBytes(*it), ITEM_SIZE);
             offset+=ITEM_SIZE;
         }
-        // for(auto it = this->getItems().begin(); it != this->getItems().end(); ++it){
-        // }
     } else if (this->getOpt() == OPT_GET_SIZE){
         memcpy(msg+offset, utils::intToBytes(this->getSetSize()), SET_LEN_SIZE);
     } else if (this->getOpt() == OPT_GET_SETS){
-        for(auto it = this->getUuids().begin(); it != this->getUuids().end(); ++it){
+        for(auto it = _uuids.begin(); it != _uuids.end(); ++it){
             memcpy(msg+offset, it->c_str(), KEY_SIZE);
             offset+=KEY_SIZE;
         }
