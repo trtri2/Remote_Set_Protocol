@@ -24,12 +24,14 @@ model::Request::Request(const char* msg)
     char opt = msg[0];
     setupFlags(opt);
     if (this->hasUuid()){
+        // +1 to hold null terminator
         char uuid[KEY_SIZE+1];
         memcpy(uuid, msg+OPT_SIZE, KEY_SIZE);
 
-        // null terminator for char*
+        // null terminator for char* needed when converting to string
         uuid[KEY_SIZE] = '\0';
         std::string str(uuid);
+
         if (this->hasItem()){
             char bytes[ITEM_SIZE];     
             memcpy(bytes, msg+OPT_SIZE+KEY_SIZE, ITEM_SIZE);
@@ -42,10 +44,8 @@ model::Request::Request(const char* msg)
     }else{
         setup(opt, "", 0);
     }
-    
-    //DEBUG LINE
-    // printf("Request: OPT Code - %x, UUID - %s, Items - %d\n", this->getOpt(), this->getUuid().c_str(), this->getItem());
 }
+   
 
 void 
 model::Request::setup(char opt, std::string uuid, int item)
@@ -133,7 +133,6 @@ model::Request::toBytes()
     char* msg = new char[bytesCount];
     msg[0] = this->getOpt();
     if (this->hasUuid()){
-        //generate random Uuid for now
         memcpy(msg+OPT_SIZE, this->getUuid().c_str(), KEY_SIZE);
         if (this->hasItem()){
             memcpy(msg+OPT_SIZE+KEY_SIZE, utils::intToBytes(this->getItem()), ITEM_SIZE);

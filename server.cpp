@@ -27,7 +27,6 @@ net::Server::setup(void* data, int port)
 {
     _data = data;
     _listenFd = socket(AF_INET, SOCK_STREAM, 0);
-    // bzero(&servaddr, sizeof(servaddr));
     _servAddr.sin_family = AF_INET;
     _servAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     _servAddr.sin_port = htons(port);
@@ -60,9 +59,6 @@ net::Server::bindSocket()
         perror("[SERVER] [ERROR] bind() failed");
         shutdown();
     }
-
-    //DEBUG !!
-    printf("[SERVER] binding\n");
 }
 
 // Listen to incoming connections
@@ -73,17 +69,12 @@ net::Server::startListen()
         perror("[SERVER] [ERROR] listen() failed");
         shutdown();
     }
-
-    // DEBUG !!
-    printf("[SERVER] LISTENING...\n");
 }
 
 // Close the listening socket
 void 
 net::Server::shutdown()
 {
-    // DEBUG !!
-    printf("[SERVER] shutting down...\n");
     close(_listenFd);
     exit(1);
 }

@@ -142,7 +142,7 @@ model::Response::getLen()
         // get count of getUuids vector
         bytesCount = (KEY_SIZE * this->getUuids().size());
     }
-    wordCount = bytesCount / INT_SIZE;
+    wordCount = bytesCount / LEN_WORD_SIZE;
     return wordCount;
 }
 
